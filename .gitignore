@@ -1,0 +1,9 @@
+archives
+test_destinazione
+test_sorgente
+backup_retry.log
+backup.log
+dest_chaos
+source_chaos
+rsync_master.log
+audit_clean.log
