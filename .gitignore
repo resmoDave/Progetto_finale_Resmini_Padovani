@@ -7,3 +7,12 @@ dest_chaos
 source_chaos
 rsync_master.log
 audit_clean.log
+server_emails.db
+.env
+.warn_client_offset
+.warn_client_queue
+local_backup
+remote_storage
+quota_killer.log
+quota_usage.log
+srv-db-01_estratto.log

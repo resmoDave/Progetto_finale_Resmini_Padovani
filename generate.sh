@@ -1,66 +1,82 @@
 #!/bin/bash
 
-# --- CONFIGURAZIONE ---
-LOG_FILE="rsync_master.log"
-SRC="./source_chaos"
-DEST="./dest_chaos"
+# --- CONFIGURATION ---
+LOG_FILE="$(pwd)/rsync_master.log"
+MOCK_CLIENTS_DIR="$(pwd)/remote_storage"
+LOCAL_BACKUP_DIR="$(pwd)/local_backup"
+RSYNC_CONF="$(pwd)/rsyncd.conf"
+PORT=9876
 ITERAZIONI=100
 
-# Server
-WEB_SERVERS=("srv-web-01" "srv-web-02" "srv-web-03" "srv-web-04" "srv-web-05")
-DB_SERVERS=("srv-db-01" "srv-db-02" "srv-db-03")
-ALL_SERVERS=("${WEB_SERVERS[@]}" "${DB_SERVERS[@]}")
+# Cleanup
+rm -rf "$MOCK_CLIENTS_DIR" "$LOCAL_BACKUP_DIR" "$LOG_FILE" "$RSYNC_CONF"
+mkdir -p "$MOCK_CLIENTS_DIR" "$LOCAL_BACKUP_DIR"
 
-# Pulizia ambiente
-rm -rf $SRC $DEST $LOG_FILE
-mkdir -p $DEST
+# 1. CREATE MOCK RSYNC DAEMON CONFIG
+# This allows us to "pull" from localhost as if it were a remote client
+cat <<EOF > "$RSYNC_CONF"
+port = $PORT
+use chroot = no
+[clients]
+    path = $MOCK_CLIENTS_DIR
+    read only = yes
+    list = yes
+EOF
 
-# Generazione IP fissi
+# 2. START THE DAEMON (Running in background)
+rsync --daemon --config="$RSYNC_CONF" --address=127.0.0.1
+trap "fuser -k $PORT/tcp; rm $RSYNC_CONF" EXIT
+
+# Server/IP Mapping
+ALL_CLIENTS=("srv-web-01" "srv-web-02" "srv-web-03" "srv-web-04" "srv-web-05" "srv-db-01" "srv-db-02" "srv-db-03")
 declare -A HOST_IPS
-for s in "${ALL_SERVERS[@]}"; do
+for s in "${ALL_CLIENTS[@]}"; do
     HOST_IPS[$s]="$((RANDOM%256)).$((RANDOM%256)).$((RANDOM%256)).$((RANDOM%256))"
 done
 
-echo "--- GENERAZIONE 100 LOG REALI CON IP PUBBLICI (BUG FIX) ---"
+echo "--- GENERATING AUTHENTIC PULL LOGS (DAEMON MODE) ---"
 
 for ((i=1; i<=$ITERAZIONI; i++)); do
-    SERVER=${ALL_SERVERS[$((RANDOM%8))]}
-    IP=${HOST_IPS[$SERVER]}
-    
-    [[ $SERVER == srv-web* ]] && SIZE=$((RANDOM%5 + 1)) || SIZE=$((RANDOM%40 + 20))
-    mkdir -p "$SRC/$SERVER"
+    CLIENT=${ALL_CLIENTS[$((RANDOM%8))]}
+    IP=${HOST_IPS[$CLIENT]}
+    [[ $CLIENT == srv-web* ]] && SIZE=$((RANDOM%5 + 1)) || SIZE=$((RANDOM%40 + 20))
 
-    # --- FIX: Rimosso %t [%p] dal formato. Rsync li aggiunge da solo. ---
-    LOG_FMT="$IP ($SERVER) %i %f %l"
+    # Create file on the "Remote" side
+    mkdir -p "$MOCK_CLIENTS_DIR/$CLIENT"
+    FILE="backup_$i.dat"
+    dd if=/dev/urandom of="$MOCK_CLIENTS_DIR/$CLIENT/$FILE" bs=1M count=$SIZE 2>/dev/null
+
+    # THE MAGIC: PULLING from the daemon
+    # Log format: %i will show ">" (received) and summary will show "received [BIG]"
+    # We use --out-format to ensure the log file gets the specific IP and Hostname
+    LOG_FMT="$IP ($CLIENT) %i %f %l"
 
     SCENARIO=$((RANDOM%10))
     case $SCENARIO in
-        0|1) # Permission Denied
-            FILE="secure_$i.bin"
-            echo "lock" > "$SRC/$SERVER/$FILE"
-            chmod 000 "$SRC/$SERVER/$FILE"
-            rsync -av --log-file=$LOG_FILE --log-file-format="$LOG_FMT" "$SRC/$SERVER/" "$DEST/$SERVER/" 2>/dev/null
-            chmod 644 "$SRC/$SERVER/$FILE"
+        0) # Permission Error
+            chmod 000 "$MOCK_CLIENTS_DIR/$CLIENT/$FILE"
+            rsync -av --log-file="$LOG_FILE" --log-file-format="$LOG_FMT" \
+                rsync://127.0.0.1:$PORT/clients/$CLIENT/ "$LOCAL_BACKUP_DIR/$CLIENT/" 2>/dev/null
+            chmod 644 "$MOCK_CLIENTS_DIR/$CLIENT/$FILE"
             ;;
-        2) # Connection Reset
-            FILE="dump_$i.sql"
-            dd if=/dev/urandom of="$SRC/$SERVER/$FILE" bs=1M count=$SIZE 2>/dev/null
-            rsync -av --log-file=$LOG_FILE --log-file-format="$LOG_FMT" "$SRC/$SERVER/" "$DEST/$SERVER/" &
+        1) # Connection Reset / Kill
+            rsync -av --log-file="$LOG_FILE" --log-file-format="$LOG_FMT" \
+                rsync://127.0.0.1:$PORT/clients/$CLIENT/ "$LOCAL_BACKUP_DIR/$CLIENT/" &
             RPID=$!
-            sleep 0.1
+            sleep 0.01
             kill -9 $RPID 2>/dev/null
-            # Scriviamo l'errore includendo solo le info che mancano
-            echo "$(date +'%Y/%m/%d %H:%M:%S') [$RPID] $IP ($SERVER) rsync error: connection reset by peer (code 12)" >> $LOG_FILE
+            echo "$(date +'%Y/%m/%d %H:%M:%S') [$RPID] $IP ($CLIENT) rsync error: connection reset by peer (code 12)" >> "$LOG_FILE"
             ;;
-        *) # Successo
-            FILE="backup_$i.tar.gz"
-            dd if=/dev/urandom of="$SRC/$SERVER/$FILE" bs=1M count=$SIZE 2>/dev/null
-            rsync -av --log-file=$LOG_FILE --log-file-format="$LOG_FMT" "$SRC/$SERVER/" "$DEST/$SERVER/" > /dev/null
+        *) # Successful Pull
+            rsync -av --log-file="$LOG_FILE" --log-file-format="$LOG_FMT" \
+                rsync://127.0.0.1:$PORT/clients/$CLIENT/ "$LOCAL_BACKUP_DIR/$CLIENT/" > /dev/null
             ;;
     esac
 
-    [ $((i % 20)) -eq 0 ] && echo "Processati $i backup..."
+    [ $((i % 20)) -eq 0 ] && echo "Pulling $i/100 completed..."
 done
 
 echo "------------------------------------------------"
-echo "✅ LOG FINALE GENERATO CORRETTAMENTE"
+echo "✅ DONE. Check the log: $LOG_FILE"
+echo "Example of a successful pull line from your log:"
+tail -n 1 "$LOG_FILE"
