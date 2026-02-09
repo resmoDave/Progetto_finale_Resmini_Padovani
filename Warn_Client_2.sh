@@ -5,13 +5,20 @@ if [ -f .env ]; then
     export $(grep -v '^#' .env | xargs)
 fi
 
-# Configurazione API MailerSend
-API_URL="https://api.mailersend.com/v1/email"
+# CONFIGURAZIONE
 LOG_FILE="audit_clean.log"
 SERVER_API_URL="http://127.0.0.1:8000/get-email/"
+TARGET_ID="srv-web-01" # Cambialo con l'ID che vuoi monitorare
+
+echo "--- [START] Script di monitoraggio avviato ---"
+echo "Log file: $LOG_FILE"
+echo "Target ID: $TARGET_ID"
+echo "API Server: $SERVER_API_URL"
+echo "----------------------------------------------"
 
 # Funzione per scrivere in coda
-send_email() {
+send_email_to_queue() {
+    echo "[DEBUG] Aggiunta alla coda: ID=$1, Errore=$2"
     echo "$1|$2|$3|$4" >> .warn_client_queue
 }
 
@@ -23,79 +30,69 @@ process_queue() {
             continue
         fi
 
+        # Legge dalla coda
         IFS='|' read -r server_id error_type file_path timestamp < .warn_client_queue
-        # Rimuove la prima riga processata in modo atomico (più sicuro)
         sed -i '1d' .warn_client_queue
 
-        # FILTRO DEBUG: Solo srv-web-01
-        if [[ "$DEBUG" == "1" && "$server_id" != "srv-web-01" ]]; then
-            echo "[DEBUG] Ignoro $server_id (cerco srv-web-01)"
+        echo "[PROCESS] Analizzo evento per: $server_id"
+
+        # --- FILTRO ID ---
+        if [[ "$server_id" != "$TARGET_ID" ]]; then
+            echo "[SKIP] Ignoro $server_id perché non è il target ($TARGET_ID)"
             continue
         fi
 
         # Recupera email reale
+        echo "[API] Richiesta email per $server_id..."
         recipient_email=$(curl -s "${SERVER_API_URL}${server_id}" | grep -oP '"email":\s*"\K[^\"]+')
         
         if [[ -z "$recipient_email" ]]; then
-            echo "[WARN] Email non trovata per $server_id."
+            echo "[ERROR] API non ha restituito nessuna email per $server_id!"
             continue
         fi
 
-        echo "[INFO] Invio API a $recipient_email per server $server_id..."
+        echo "[MAIL] Email trovata: $recipient_email. Preparo l'invio..."
 
-        # Creazione JSON
-        JSON_DATA=$(cat <<EOF
-{
-    "from": { "email": "$FROM_EMAIL", "name": "Supporto Tecnico" },
-    "to": [ { "email": "$recipient_email" } ],
-    "subject": "[AVVISO] Errore Backup $server_id",
-    "text": "Errore $error_type su $server_id. File: $file_path",
-    "html": "<h3>Allerta Backup</h3><p>Server: $server_id<br>Errore: $error_type</p>"
-}
-EOF
-)
+        # Creazione corpo email
+        EMAIL_SUBJECT="[ALLERTA] Backup Fallito: $server_id"
+        EMAIL_BODY="Dettagli Errore
+-------------------------
+Server:   $server_id
+Errore:   $error_type
+File:     $file_path
+Data:     $timestamp"
 
-        # Invio API
-        curl -s -X POST "$API_URL" \
-            -H "Content-Type: application/json" \
-            -H "Authorization: Bearer $API_TOKEN" \
-            -d "$JSON_DATA"
-
-        if [[ "$DEBUG" == "1" && "$server_id" == "srv-web-01" ]]; then
-            echo "[DEBUG] Test srv-web-01 completato. Esco."
-            pkill -P $$
-            exit 0
+        # INVIO LOCALE
+        echo "$EMAIL_BODY" | mail -s "$EMAIL_SUBJECT" "$recipient_email"
+        
+        if [ $? -eq 0 ]; then
+            echo "[SUCCESS] Email inviata con successo a $recipient_email"
+        else
+            echo "[ERROR] Errore durante l'invio con il comando mail"
         fi
+
     done
 }
 
-# --- MONITORAGGIO LOG CORRETTO ---
+# --- MONITORAGGIO LOG ---
 processed_lines=0
 [ -f .warn_client_offset ] && processed_lines=$(cat .warn_client_offset)
 
-# Regex precompilata
 REGEX_PAREN="\(([^)]+)\)"
-
-# FIX IMPORTANTE:
-# 1. Calcoliamo la riga da cui partire (+1 perché tail parte da 1, non 0)
 start_line=$((processed_lines + 1))
 
-# 2. Usiamo 'tail -n +$start_line' per dire "inizia dalla riga X del file"
-#    e aggiungiamo -F per seguire i nuovi dati.
-# 3. Abbiamo rimosso awk per evitare il blocco logico.
+echo "[MONITOR] Inizio scansione log dalla riga $start_line..."
+
 tail -F -n +$start_line "$LOG_FILE" | while read -r line; do
-    
-    # Incremento contatore e salvataggio
     ((processed_lines++))
     echo "$processed_lines" > .warn_client_offset
     
-    # Parsing veloce in Bash senza chiamare grep/awk esterni (ottimizzazione CPU)
+    # Se la riga contiene un errore di connessione o permessi
     if [[ "$line" == *"ERROR_CONN"* ]] || [[ "$line" == *"ERROR_PERM"* ]]; then
+        echo "[FOUND] Rilevato errore nel log: $line"
         
-        # Estrazione campi usando IFS (molto più veloce di awk '{print $1}')
         IFS='|' read -r timestamp pid host_field dimension file_path error_type <<< "$line"
         
-        # Pulizia spazi bianchi (trim)
         timestamp=$(echo "$timestamp" | xargs)
         host_field=$(echo "$host_field" | xargs)
         file_path=$(echo "$file_path" | xargs)
@@ -108,8 +105,9 @@ tail -F -n +$start_line "$LOG_FILE" | while read -r line; do
             [[ "$server_id" == "source_chaos" ]] && server_id=$(echo "$file_path" | cut -d'/' -f2)
         fi
         
-        send_email "$server_id" "$error_type" "$file_path" "$timestamp"
+        send_email_to_queue "$server_id" "$error_type" "$file_path" "$timestamp"
     fi
 done &
 
+# Avvia il worker in primo piano così vedi i log qui
 process_queue

@@ -42,7 +42,7 @@ def init_db():
     for server_id in ALL_SERVERS:
         if server_id == "srv-web-01":
             # 1. The specific requested email
-            email = "marcopadovani06@gmail.com"
+            email = "padovanimarco488@gmail.com"
         else:
             # 2. Generate unique email for the others
             # Including the server_id in the string ensures it is 100% unique
