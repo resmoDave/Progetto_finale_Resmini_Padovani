@@ -56,11 +56,11 @@ process_queue() {
         # Creazione corpo email
         EMAIL_SUBJECT="[ALLERTA] Backup Fallito: $server_id"
         EMAIL_BODY="Dettagli Errore
--------------------------
-Server:   $server_id
-Errore:   $error_type
-File:     $file_path
-Data:     $timestamp"
+        -------------------------
+        Server:   $server_id
+        Errore:   $error_type
+        File:     $file_path
+        Data:     $timestamp"
 
         # INVIO LOCALE
         echo "$EMAIL_BODY" | mail -s "$EMAIL_SUBJECT" "$recipient_email"
