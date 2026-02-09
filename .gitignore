@@ -16,3 +16,4 @@ remote_storage
 quota_killer.log
 quota_usage.log
 srv-db-01_estratto.log
+audit_custom.log
