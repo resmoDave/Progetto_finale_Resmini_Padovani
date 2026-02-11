@@ -15,7 +15,7 @@ Con l'implementazione della suite di 10 script Bash, costruiamo un **Livello di 
 📂 **Script:** [`Manutenzione_Log_3.sh`](./Manutenzione_Log_3.sh)
 
 ### 4. Controllo Quote e Prevenzione Abusi
-**Soluzione Bash:** Implementazione di un controllo volumetrico in tempo reale. Se un cliente supera la quota contrattuale pattuita, il sistema blocca preventivamente il trasferimento per proteggere lo storage aziendale e garantire le risorse agli altri utenti (mitigazione *Noisy Neighbor*).
+**Soluzione Bash:** Implementazione di un controllo volumetrico in tempo reale. Se un cliente supera la quota contrattuale pattuita, il sistema blocca preventivamente il trasferimento per proteggere lo storage aziendale e garantire le risorse agli altri utenti.
 📂 **Script:** [`Quota_Killer_4.sh`](./Quota_Killer_4.sh)
 
 ### 5. Organizzazione Multi-Tenant (Log Splitting)
