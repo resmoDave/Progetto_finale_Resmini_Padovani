@@ -1,6 +1,6 @@
 ## La Situazione "DOPO": Il Valore Aggiunto della Suite Bash
 
-Con l'implementazione della suite di 10 script Bash, costruiamo un **Livello di Governance (Control Plane)** sopra il motore Rsync. Trasformiamo un tool tecnico in una piattaforma di servizio gestita, risolvendo le criticità native attraverso l'automazione.
+Con l’implementazione di 10 script Bash, creiamo un livello di controllo sopra Rsync. In questo modo, trasformiamo uno strumento tecnico in un sistema gestito e automatizzato, risolvendo i suoi limiti principali in modo più semplice ed efficace.
 
 ### 1. Refactoring e Normalizzazione Log
 **Soluzione Bash:** Il sistema intercetta e analizza il flusso dati in tempo reale. Lo script converte il log grezzo e complesso di Rsync in un formato strutturato e leggibile (CSV/JSON-like), semplificando drasticamente l'analisi e lo sviluppo delle successive logiche di controllo.
