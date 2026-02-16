@@ -11,7 +11,7 @@ Con l’implementazione di 10 script Bash, creiamo un livello di controllo sopra
 📂 **Script:** [`Warn_Client_2.sh`](./Warn_Client_2.sh)
 
 ### 3. Manutenzione e Rotazione Log
-**Soluzione Bash:** Per prevenire la saturazione del disco, vengono applicate logiche di *Log Rotation*. I log obsoleti vengono automaticamente compressi e archiviati, mantenendo il sistema snello e le performance elevate.
+**Soluzione Bash:** Per prevenire la saturazione del disco, vengono applicate logiche di *Log Rotation*. I log obsoleti vengono compressi e archiviati, mantenendo il sistema snello e le performance elevate.
 📂 **Script:** [`Manutenzione_Log_3.sh`](./Manutenzione_Log_3.sh)
 
 ### 4. Controllo Quote e Prevenzione Abusi
