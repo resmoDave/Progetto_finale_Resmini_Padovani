@@ -21,3 +21,6 @@ cleanup_audit.log
 cleanup_report_20260209.txt
 backup_check.log
 whitelist.log
+payment_enforcer.log
+srv-web-01.lastmail
+srv-web-01.start
