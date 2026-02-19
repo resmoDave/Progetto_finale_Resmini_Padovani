@@ -19,3 +19,4 @@ srv-db-01_estratto.log
 audit_custom.log
 cleanup_audit.log
 cleanup_report_20260209.txt
+backup_check.log
