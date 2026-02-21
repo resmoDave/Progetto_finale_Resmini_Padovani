@@ -32,7 +32,7 @@ Verifica automatica che ogni cliente abbia almeno un backup completo valido negl
 📂 **Script:** [backup_warn_7.sh](backup_warn_7.sh)
 
 ## 8. Sicurezza Accessi (Whitelist Enforcement)
-Analisi del log di audit e verifica dello stato di ogni server tramite API. Blocca con iptables gli IP dei client non attivi (non paganti), con modalità dry-run per simulazioni. Gestisce la whitelist e previene accessi non autorizzati.
+Analisi del log di audit e verifica dello stato di ogni server tramite API. Blocca con iptables gli IP dei client non attivi (non paganti). Gestisce la whitelist e previene accessi non autorizzati.
 📂 **Script:** [block_inactive_8.sh](block_inactive_8.sh)
 
 ## 9. Gestione Insoluti e Recupero Crediti
