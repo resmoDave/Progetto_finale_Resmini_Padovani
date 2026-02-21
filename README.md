@@ -11,8 +11,8 @@ Lo script effettua il parsing in tempo reale del log Rsync, riconoscendo automat
 Monitoraggio continuo del log di backup. In caso di errori di connessione o permessi, il sistema intercetta l’evento, lo inserisce in una coda e invia notifiche email al cliente tramite API. Il worker gestisce la coda, garantendo la consegna delle notifiche anche in caso di errori temporanei.
 📂 **Script:** [Warn_Client_2.sh](Warn_Client_2.sh)
 
-## 3. Manutenzione e Rotazione Log
-Gestione automatica dei file di log: rotazione, compressione e archiviazione. Mantiene solo gli ultimi archivi per risparmiare spazio, con estrazione rapida dei log compressi. La pulizia è selettiva per evitare la perdita di dati rilevanti.
+## 3. Manutenzione Log
+Gestione automatica dei file di log: compressione e archiviazione. Mantiene solo gli ultimi archivi per risparmiare spazio, con estrazione rapida dei log compressi. La pulizia è selettiva per evitare la perdita di dati rilevanti.
 📂 **Script:** [Manutenzione_Log_3.sh](Manutenzione_Log_3.sh)
 
 ## 4. Controllo Quote e Prevenzione Abusi
