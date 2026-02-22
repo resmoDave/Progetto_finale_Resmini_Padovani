@@ -5,6 +5,12 @@ Questi script Bash fornisce un layer di automazione e controllo avanzato sopra R
 
 ---
 
+## Caso d'Uso – contesto e motivazione
+
+La documentazione completa del progetto è disponibile nel file [`ServerBackup - Marco Padovani, Davide Resmini.pdf`](ServerBackup%20-%20Marco%20Padovani%2C%20Davide%20Resmini.pdf).
+
+---
+
 ## Come iniziare – Guida rapida
 
 ### Prerequisiti
