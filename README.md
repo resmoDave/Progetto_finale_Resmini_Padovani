@@ -24,6 +24,12 @@ Prima di eseguire qualsiasi script, assicurarsi che i seguenti strumenti siano d
 - `iptables` (richiesto da [`block_inactive_8.sh`](block_inactive_8.sh) – necessita dei permessi di root)
 - Connessione internet attiva se si utilizzano le notifiche email tramite API
 
+### Configurazione email da riga di comando
+
+Alcuni script (come [`Warn_Client_2.sh`](Warn_Client_2.sh), [`backup_warn_7.sh`](backup_warn_7.sh), [`payment_enforcer_9.sh`](payment_enforcer_9.sh) e [`full_verification_10.sh`](full_verification_10.sh)) inviano notifiche email. Per abilitare l'invio di email dal server Linux è necessario configurare un servizio SMTP.
+
+La guida di riferimento completa è disponibile su DigitalOcean: [How to Send Emails from the Linux Command Line](https://www.digitalocean.com/community/tutorials/send-email-linux-command-line).
+
 ### Passo 1 – Generare i dati di test
 
 Il punto di ingresso dell'intero sistema è [`generate.sh`](generate.sh). Questo script costruisce un ambiente di test realistico eseguendo le seguenti operazioni:
@@ -90,12 +96,6 @@ python server.py
 ```
 
 Il server rimarrà in esecuzione in background mentre si eseguono gli script Bash.
-
-### Configurazione email da riga di comando
-
-Alcuni script (come [`Warn_Client_2.sh`](Warn_Client_2.sh), [`backup_warn_7.sh`](backup_warn_7.sh), [`payment_enforcer_9.sh`](payment_enforcer_9.sh) e [`full_verification_10.sh`](full_verification_10.sh)) inviano notifiche email. Per abilitare l'invio di email dal server Linux è necessario configurare un servizio SMTP.
-
-La guida di riferimento completa è disponibile su DigitalOcean: [How to Send Emails from the Linux Command Line](https://www.digitalocean.com/community/tutorials/send-email-linux-command-line).
 
 ---
 
