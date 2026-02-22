@@ -1,7 +1,7 @@
 
-# Suite Bash Rsync – Approfondimento Tecnico
+# Bash Rsync – Approfondimento tecnico
 
-Questa suite di script Bash fornisce un layer di automazione e controllo avanzato sopra Rsync, trasformando la gestione dei backup in un sistema robusto, monitorato e conforme alle policy aziendali e normative. Di seguito una panoramica tecnica delle funzionalità implementate:
+Questi script Bash fornisce un layer di automazione e controllo avanzato sopra Rsync, trasformando la gestione dei backup in un sistema robusto, monitorato e conforme alle policy aziendali e normative. Di seguito una panoramica tecnica delle funzionalità implementate:
 
 ## 1. Refactoring e Normalizzazione Log
 Lo script effettua il parsing in tempo reale del log Rsync, riconoscendo automaticamente le colonne chiave (timestamp, PID, host/IP, dimensione, percorso, esito). Genera un file di audit strutturato, facilitando l’analisi e l’integrazione con altri moduli. Supporta configurazioni personalizzate e filtra i dati per una reportistica precisa.
