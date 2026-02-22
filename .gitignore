@@ -25,3 +25,4 @@ payment_enforcer.log
 srv-web-01.lastmail
 srv-web-01.start
 full_verification.log
+rsyncd.conf
