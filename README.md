@@ -5,7 +5,7 @@ Questi script Bash fornisce un layer di automazione e controllo avanzato sopra R
 
 ---
 
-## Come Iniziare – Guida Rapida
+## Come iniziare – Guida rapida
 
 ### Prerequisiti
 
@@ -18,7 +18,7 @@ Prima di eseguire qualsiasi script, assicurarsi che i seguenti strumenti siano d
 - `iptables` (richiesto da [`block_inactive_8.sh`](block_inactive_8.sh) – necessita dei permessi di root)
 - Connessione internet attiva se si utilizzano le notifiche email tramite API
 
-### Passo 1 – Generare i Dati di Test
+### Passo 1 – Generare i dati di Test
 
 Il punto di ingresso dell'intero sistema è [`generate.sh`](generate.sh). Questo script costruisce un ambiente di test realistico eseguendo le seguenti operazioni:
 
