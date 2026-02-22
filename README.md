@@ -3,6 +3,67 @@
 
 Questi script Bash fornisce un layer di automazione e controllo avanzato sopra Rsync, trasformando la gestione dei backup in un sistema robusto, monitorato e conforme alle policy aziendali e normative. Di seguito una panoramica tecnica delle funzionalità implementate:
 
+---
+
+## Come Iniziare – Guida Rapida
+
+### Prerequisiti
+
+Prima di eseguire qualsiasi script, assicurarsi che i seguenti strumenti siano disponibili sul sistema:
+
+- `bash` (versione 4.0 o superiore)
+- `rsync`
+- `fuser` (parte del pacchetto `psmisc` sulla maggior parte delle distro Linux)
+- `dd`, `chmod`, `kill` (utility Unix standard)
+- `iptables` (richiesto da [`block_inactive_8.sh`](block_inactive_8.sh) – necessita dei permessi di root)
+- Connessione internet attiva se si utilizzano le notifiche email tramite API
+
+### Passo 1 – Generare i Dati di Test
+
+Il punto di ingresso dell'intero sistema è [`generate.sh`](generate.sh). Questo script costruisce un ambiente di test realistico eseguendo le seguenti operazioni:
+
+1. **Pulizia** di eventuali artefatti di esecuzioni precedenti (log, directory di backup, configurazione rsync).
+2. **Avvio di un daemon rsync locale** sulla porta `9876` in ascolto su `127.0.0.1`, tramite un file `rsyncd.conf` temporaneo che espone un modulo `clients` puntato a una directory di storage simulata.
+3. **Registrazione di un `trap`** affinché, all'uscita dello script (normale o per errore), il daemon venga terminato e il file di configurazione rimosso automaticamente.
+4. **Simulazione di 8 server** (`srv-web-01` fino a `srv-web-05` e `srv-db-01` fino a `srv-db-03`), ognuno con un indirizzo IP casuale memorizzato in un array associativo.
+5. **Esecuzione di 100 iterazioni di pull rsync**, in cui ogni iterazione:
+   - Seleziona un server casuale.
+   - Crea un file binario casuale (1–5 MB per i web server, 20–60 MB per i DB server) tramite `dd if=/dev/urandom`.
+   - Sceglie uno scenario casuale: **errore di permessi** (10% di probabilità), **connessione interrotta** (10% di probabilità), oppure **trasferimento riuscito** (80% di probabilità).
+   - Aggiunge una riga strutturata al file `rsync_master.log` nel formato: `TIMESTAMP [PID] IP (CLIENT) ITEMIZE FILENAME SIZE`.
+
+Per eseguirlo:
+
+```bash
+chmod +x generate.sh
+./generate.sh
+```
+
+Al termine, il file `rsync_master.log` sarà popolato e pronto per essere elaborato da tutti gli altri script.
+
+### Passo 2 – Eseguire gli Script di Elaborazione
+
+Ogni script è indipendente e legge da `rsync_master.log` (o dal log strutturato prodotto da [`Refactoring_Log_1.sh`](Refactoring_Log_1.sh)). L'ordine di esecuzione consigliato è:
+
+1. [`./Refactoring_Log_1.sh`](Refactoring_Log_1.sh)
+2. [`./Warn_Client_2.sh`](Warn_Client_2.sh)
+3. [`./Manutenzione_Log_3.sh`](Manutenzione_Log_3.sh)
+4. [`./Quota_Killer_4.sh`](Quota_Killer_4.sh)
+5. [`./split_logs_by_id_5.sh`](split_logs_by_id_5.sh)
+6. [`./clean_up_6.sh`](clean_up_6.sh)
+7. [`./backup_warn_7.sh`](backup_warn_7.sh)
+8. [`./block_inactive_8.sh`](block_inactive_8.sh)
+9. [`./payment_enforcer_9.sh`](payment_enforcer_9.sh)
+10. [`./full_verification_10.sh`](full_verification_10.sh)
+
+Per rendere tutti gli script eseguibili in un solo comando:
+
+```bash
+chmod +x *.sh
+```
+
+---
+
 ## 1. Refactoring e Normalizzazione Log
 Lo script effettua il parsing in tempo reale del log Rsync, riconoscendo automaticamente le colonne chiave (timestamp, PID, host/IP, dimensione, percorso, esito). Genera un file di audit strutturato, facilitando l’analisi e l’integrazione con altri moduli. Supporta configurazioni personalizzate e filtra i dati per una reportistica precisa.
 📂 **Script:** [Refactoring_Log_1.sh](Refactoring_Log_1.sh)
