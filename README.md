@@ -91,6 +91,12 @@ python server.py
 
 Il server rimarrà in esecuzione in background mentre si eseguono gli script Bash.
 
+### Configurazione email da riga di comando
+
+Alcuni script (come [`Warn_Client_2.sh`](Warn_Client_2.sh), [`backup_warn_7.sh`](backup_warn_7.sh), [`payment_enforcer_9.sh`](payment_enforcer_9.sh) e [`full_verification_10.sh`](full_verification_10.sh)) inviano notifiche email. Per abilitare l'invio di email dal server Linux è necessario configurare un servizio SMTP.
+
+La guida di riferimento completa è disponibile su DigitalOcean: [How to Send Emails from the Linux Command Line](https://www.digitalocean.com/community/tutorials/send-email-linux-command-line).
+
 ---
 
 ## 1. Refactoring e normalizzazione log
